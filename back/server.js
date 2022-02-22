@@ -1,10 +1,12 @@
 const express = require("express");
 const cors = require("cors");
-const http = require("http");
+const {Server} = require("socket.io")
+const {createServer} = require("http")
 require("dotenv").config();
-
 const app = express()
-const server = http.createServer(app);
+const httpServer = createServer(app);
+const io = new Server(httpServer)
+
 const port = process.env.PORT || 8080;
 
 app.use(cors());
@@ -27,15 +29,30 @@ app.get("id/get/:id", async (req, res, next) => {
     }
 })
 
-const io = require("socket.io")
-
+const allUsersObj = []
 io.on("connection", (socket)=>{
-    console.log("connected");
-    socket.on("firstConecting", (data)=>{
-        socket.broadcast.emit("")
+    console.log(socket.id, "connected");
+    socket.on("setUserName", (userName)=>{
+        const userObj = {id: socket.id, userName}
+        allUsersObj.push(userObj)
+        socket.emit("getID", (userObj))
+    })
+    socket.on("newUserLogin", ()=>{
+        allUsersObj.push(socket.id)
+        console.log(allUsersObj);
+        socket.broadcast.emit("newUserLogin")
+    })
+    socket.on("sendMessage", (msgObj)=>{
+        console.log(msgObj);
+        io.emit("getNewMsg", msgObj)
+    })
+    socket.on("disconnect", ()=>{
+        allUsersObj.splice(allUsersObj.indexOf(socket.id), 1)
     })
 })
 
-server.listen(port, () => {
+io.sockets.on("error", e=> console.log(e))
+
+httpServer.listen(port, () => {
     console.log(`listening on port ${port}`);
 })
