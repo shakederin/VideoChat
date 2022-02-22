@@ -1,33 +1,25 @@
 const express = require("express");
+const cookieParser = require('cookie-parser');
 const cors = require("cors");
 const http = require("http");
 require("dotenv").config();
+const { addUser, deleteUser } = require("./control/users");
 
 const app = express()
 const server = http.createServer(app);
 const port = process.env.PORT || 8080;
 
-app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
+app.use(cors({credentials: true, origin: 'http://'}));
 
-app.post("id/save", async (req, res, next) => {
-    try {
-        // save id
-    } catch (error) {
-        next("coudent save id")
-    }
-})
+app.post("/login", firstDoor);
+app.post("/user/add", addUser);
+app.post("/user/delete", deleteUser);
 
-app.get("id/get/:id", async (req, res, next) => {
-    try {
-        const { id } = req.params;
-        // const code = await //get code
-    } catch (error) {
-        next("coudent get id")
-    }
-})
 
-const io = require("socket.io")
+
+const io = require("socket.io");
 
 io.on("connection", (socket)=>{
     console.log("connected");
